@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Práctica EMS: Tratamiento de la Información y Azar</title>
+<style>
+:root{--bg:#f6f7f5;--card:#ffffff;--text:#1f2a24;--muted:#5d6b63;--line:#dde3de;--accent:#2e7d32;--accent-soft:#e6f2e7;--ok:#2e7d32;--ok-bg:#e6f2e7;--bad:#b3261e;--bad-bg:#fbe9e7;}
+@media (prefers-color-scheme:dark){:root{--bg:#15191a;--card:#1e2426;--text:#e8ede9;--muted:#9fb0a5;--line:#313b38;--accent:#6fcf76;--accent-soft:#1f3322;--ok:#6fcf76;--ok-bg:#1f3322;--bad:#ff8a80;--bad-bg:#3a2422;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55}
+main{max-width:640px;margin:0 auto;padding:16px 16px 60px}
+h1{font-size:20px;margin:8px 0 4px;font-weight:600}
+.sub{color:var(--muted);font-size:14px;margin:0 0 14px}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar>div{height:100%;width:0;background:var(--accent);transition:width .3s}
+.meta{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:6px 0 14px;gap:8px;flex-wrap:wrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin:0 0 14px}
+.part{color:var(--accent);font-weight:600;font-size:14px;margin:0 0 8px}
+.q{margin:0 0 16px;white-space:pre-line;font-size:17px}
+.opts{display:flex;flex-direction:column;gap:8px;margin:0 0 6px}
+.opt{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--line);border-radius:8px;padding:11px 12px;cursor:pointer}
+.opt:hover{border-color:var(--accent)}
+.opt input{accent-color:var(--accent);width:18px;height:18px;margin:2px 0 0}
+.ans{display:flex;align-items:center;gap:8px;margin:0 0 6px;flex-wrap:wrap}
+.ans input[type=text]{font:inherit;font-size:17px;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:140px}
+.ans .hint{color:var(--muted);font-size:13px;width:100%}
+.err{color:var(--bad);font-size:14px;min-height:20px;margin:6px 0 0}
+.nav{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
+button{font:inherit;border:0;border-radius:8px;padding:10px 18px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
+@media (prefers-color-scheme:dark){button{color:#0f1a10}}
+button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+button:disabled{opacity:.4;cursor:default}
+.final{background:var(--accent-soft);border:1px solid var(--accent);border-radius:12px;padding:16px;margin:0 0 16px}
+.final h2{margin:0 0 8px;font-size:20px}
+.final ul{margin:0;padding-left:20px}
+.rev{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:0 0 10px}
+.rev .t{font-weight:600;font-size:14px;margin:0 0 6px}
+.rev .t.ok{color:var(--ok)}
+.rev .t.bad{color:var(--bad)}
+.rev p{margin:0 0 6px;white-space:pre-line;font-size:15px}
+.rev .mine,.rev .right{font-size:14px;color:var(--muted)}
+.rev details{margin-top:6px;font-size:14px}
+.rev summary{cursor:pointer;color:var(--accent);font-weight:600}
+.rev .sol{margin-top:6px;white-space:pre-line}
+</style>
+</head>
+<body>
+<main>
+<h1>Tratamiento de la Información y Azar</h1>
+<p class="sub">21 preguntas para EMS. Resolvé cada una a mano, respondé y pasá a la siguiente. Las respuestas se corrigen al final.</p>
+<div id="screen"></div>
+</main>
+<script>
+var SECTIONS=[
+{title:"Estadística descriptiva",desc:"Organización de datos, media, mediana, moda y dispersión.",qs:[
+{t:"num",q:"Un equipo de fútbol juvenil metió estos goles en 8 partidos: 2, 0, 3, 1, 1, 4, 0 y 1. ¿Cuál es la media de goles por partido?",a:1.5,tol:0.001,unit:"goles",hint:"Podés usar coma o punto decimal.",sol:"Suma de los goles = 2 + 0 + 3 + 1 + 1 + 4 + 0 + 1 = 12. Media = 12 ÷ 8 = 1,5 goles por partido."},
+{t:"num",q:"Seis personas tardaron en llegar al liceo (en minutos): 12, 5, 9, 7, 15 y 10. ¿Cuál es la mediana?",a:9.5,tol:0.001,unit:"min",hint:"Primero ordená los datos.",sol:"Ordenados: 5, 7, 9, 10, 12, 15. Son 6 datos, así que la mediana es el promedio de los dos centrales: (9 + 10) ÷ 2 = 9,5."},
+{t:"mc",q:"Se registró la cantidad de hermanos de 11 estudiantes: 2, 3, 3, 4, 5, 3, 2, 4, 5, 4 y 3. ¿Cuál es la moda?",o:["2","3","4","5"],a:1,sol:"El 3 aparece 4 veces, el 4 aparece 3 veces y el 2 y el 5 aparecen 2 veces cada uno. La moda es 3."},
+{t:"num",q:"Las temperaturas máximas de 8 días seguidos fueron (en °C): 18, 21, 19, 23, 25, 21, 20 y 22. ¿Cuál es el rango?",a:7,tol:0.001,unit:"°C",hint:"",sol:"Rango = mayor − menor = 25 − 18 = 7 °C."},
+{t:"num",q:"El promedio de cinco números es 12. Cuatro de ellos son 10, 14, 9 y 15. ¿Cuál es el quinto número?",a:12,tol:0.001,unit:"",hint:"Pensá cuánto tienen que sumar los cinco.",sol:"Si el promedio de 5 números es 12, suman 12 × 5 = 60. Los cuatro conocidos suman 10 + 14 + 9 + 15 = 48. El quinto es 60 − 48 = 12."},
+{t:"num",q:"En una encuesta sobre cuántas mascotas tiene cada hogar se obtuvo esta tabla de frecuencias:\n0 mascotas: 4 hogares\n1 mascota: 6 hogares\n2 mascotas: 8 hogares\n3 mascotas: 2 hogares\n¿Cuál es la media de mascotas por hogar?",a:1.4,tol:0.001,unit:"mascotas",hint:"Multiplicá cada valor por su frecuencia.",sol:"Total de hogares = 4 + 6 + 8 + 2 = 20. Total de mascotas = 0×4 + 1×6 + 2×8 + 3×2 = 0 + 6 + 16 + 6 = 28. Media = 28 ÷ 20 = 1,4."},
+{t:"num",q:"La media de edad de 4 amigos es 15 años. Cuando se suma un quinto amigo al grupo, la media pasa a ser 16 años. ¿Qué edad tiene el amigo que se sumó?",a:20,tol:0.001,unit:"años",hint:"Calculá cuánto suman las edades antes y después.",sol:"Con 4 amigos y media 15, las edades suman 15 × 4 = 60. Con 5 amigos y media 16, suman 16 × 5 = 80. El que se sumó tiene 80 − 60 = 20 años."}
+]},
+{title:"Razonamiento en contextos de incertidumbre",desc:"Sucesos, resultados posibles y técnicas de conteo.",qs:[
+{t:"mc",q:"Se lanza un dado común de 6 caras. ¿Cuál de los siguientes es un suceso seguro?",o:["Sale un 6.","Sale un número menor que 7.","Sale un número par.","Sale un número mayor que 3."],a:1,sol:"Un suceso seguro ocurre siempre. Todas las caras del dado (1 a 6) son menores que 7, así que ese suceso ocurre en los 6 casos. Los otros pueden ocurrir o no."},
+{t:"num",q:"Se lanza un dado común y, después, una moneda. ¿Cuántos resultados posibles hay?",a:12,tol:0.001,unit:"",hint:"",sol:"Por cada una de las 6 caras del dado hay 2 resultados de la moneda: 6 × 2 = 12 resultados."},
+{t:"mc",q:"Una agencia de periodismo fotografiará a cuatro estrellas de cine. El fotógrafo quiere una foto grupal en la que los cuatro famosos posen de pie, uno al lado del otro, junto a la escultura del premio. ¿De cuántas formas diferentes se pueden posicionar los cuatro famosos para tomarse la foto?",o:["4","12","16","24"],a:3,sol:"Para el primer lugar hay 4 opciones, para el segundo 3, para el tercero 2 y para el último 1. Total: 4 × 3 × 2 × 1 = 4! = 24."},
+{t:"num",q:"Un restaurante ofrece un menú con 3 entradas, 4 platos principales y 3 postres. Si cada menú lleva una entrada, un plato principal y un postre, ¿cuántos menús distintos se pueden armar?",a:36,tol:0.001,unit:"",hint:"",sol:"Principio multiplicativo: 3 × 4 × 3 = 36 menús."},
+{t:"num",q:"Un club de ajedrez tiene 8 socios y debe elegir un presidente y un secretario (dos cargos distintos, y nadie puede tener los dos). ¿De cuántas formas se pueden elegir?",a:56,tol:0.001,unit:"",hint:"Acá sí importa el orden: no es lo mismo ser presidente que secretario.",sol:"Para presidente hay 8 opciones y, una vez elegido, para secretario quedan 7: 8 × 7 = 56 formas."},
+{t:"num",q:"En un torneo juegan 6 equipos y cada equipo juega una sola vez contra cada uno de los otros. ¿Cuántos partidos se juegan en total?",a:15,tol:0.001,unit:"partidos",hint:"Cada partido enfrenta a 2 equipos y el orden no importa.",sol:"Cada partido es una pareja de equipos: C(6, 2) = (6 × 5) ÷ 2 = 15 partidos."},
+{t:"mc",q:"Cinco amigos se sientan en una fila de 5 butacas en el cine. ¿De cuántas formas diferentes pueden ubicarse?",o:["5","25","120","3125"],a:2,sol:"Para la primera butaca hay 5 opciones, para la segunda 4, para la tercera 3, para la cuarta 2 y para la última 1: 5! = 5 × 4 × 3 × 2 × 1 = 120."}
+]},
+{title:"Cálculo de probabilidades",desc:"Casos favorables sobre casos posibles, suceso contrario y porcentajes.",qs:[
+{t:"num",q:"En un bolillero hay bolillas numeradas del 1 al 20. Se extrae una al azar. ¿Cuál es la probabilidad (en %) de que el número sea múltiplo de 4?",a:25,tol:0.05,unit:"%",hint:"Escribí solo el número.",sol:"Múltiplos de 4 entre 1 y 20: 4, 8, 12, 16 y 20 (5 casos). Casos posibles: 20. P = 5/20 = 1/4 = 25 %."},
+{t:"num",q:"Una bolsa tiene 7 caramelos de frutilla, 5 de limón y 3 de naranja. Se saca uno al azar. ¿Cuál es la probabilidad (en %) de que NO sea de frutilla? Redondeá a dos decimales.",a:53.33,tol:0.05,unit:"%",hint:"Escribí solo el número, con dos decimales.",sol:"Hay 15 caramelos y 8 no son de frutilla (5 + 3). P = 8/15 ≈ 0,5333 = 53,33 %. También: 1 − 7/15 = 8/15."},
+{t:"num",q:"Se lanzan tres monedas. ¿Cuál es la probabilidad (en %) de obtener exactamente dos caras?",a:37.5,tol:0.05,unit:"%",hint:"Escribí solo el número.",sol:"Resultados posibles: 2 × 2 × 2 = 8. Con exactamente dos caras: CCS, CSC y SCC (3 casos). P = 3/8 = 0,375 = 37,5 %."},
+{t:"mc",q:"Se lanzan dos dados comunes y se suman los números que salen. ¿Cuál es la probabilidad de que la suma sea mayor que 10?",o:["1/12","1/6","1/18","3/12"],a:0,sol:"Hay 6 × 6 = 36 resultados posibles. Suman más de 10: (5,6), (6,5) y (6,6), es decir 3 casos. P = 3/36 = 1/12."},
+{t:"num",q:"La probabilidad de que mañana llueva es 0,35. ¿Cuál es la probabilidad (en %) de que NO llueva?",a:65,tol:0.05,unit:"%",hint:"Escribí solo el número.",sol:"Suceso contrario: P(no llueva) = 1 − 0,35 = 0,65 = 65 %."},
+{t:"num",q:"El equipo de prensa de una agencia está formado por 6 profesionales: 4 hombres y 2 mujeres. Para cubrir un evento, el director selecciona al azar 3 de ellos mediante un sorteo. ¿Cuál es la probabilidad (en %) de que el grupo esté integrado únicamente por varones?",a:20,tol:0.05,unit:"%",hint:"Escribí solo el número.",sol:"Casos posibles: C(6, 3) = 20. Casos favorables (3 varones de los 4): C(4, 3) = 4. P = 4/20 = 20 %.\nOtra forma: 4/6 × 3/5 × 2/4 = 24/120 = 20 %."},
+{t:"num",q:"En un grupo hay 10 estudiantes: 7 chicas y 3 chicos. Se sortean 2 para representar al grupo. ¿Cuál es la probabilidad (en %) de que los dos sean chicos? Redondeá a dos decimales.",a:6.67,tol:0.05,unit:"%",hint:"Escribí solo el número, con dos decimales.",sol:"Casos posibles: C(10, 2) = 45. Casos favorables: C(3, 2) = 3. P = 3/45 = 1/15 ≈ 6,67 %.\nOtra forma: 3/10 × 2/9 = 6/90 = 1/15 ≈ 6,67 %."}
+]}
+];
+var ALL=[];
+SECTIONS.forEach(function(sec,si){sec.qs.forEach(function(q,qi){ALL.push({q:q,s:si,n:qi+1})})});
+var TOTAL=ALL.length,idx=0,answers=[],finished=false;
+var screen=document.getElementById("screen");
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function fmt(n){return String(n).replace(".",",")}
+function parseNum(raw){var r=String(raw).replace(/%/g,"").replace(/\s/g,"").replace(",",".");if(r===""||isNaN(Number(r)))return null;return Number(r)}
+function currentValue(){
+  var item=ALL[idx];
+  if(item.q.t==="mc"){var sel=document.querySelector('input[name="opt"]:checked');return sel?+sel.value:null}
+  var v=document.getElementById("inp").value;return v.trim()===""?null:v;
+}
+function saveCurrent(){var v=currentValue();if(v!==null)answers[idx]=v;else delete answers[idx]}
+function renderQuestion(){
+  finished=false;
+  var item=ALL[idx],q=item.q,saved=answers[idx];
+  var h='<div class="bar"><div style="width:'+(idx/TOTAL*100)+'%"></div></div>';
+  h+='<div class="meta"><span>Pregunta '+(idx+1)+' de '+TOTAL+'</span><span>Parte '+(item.s+1)+'. '+esc(SECTIONS[item.s].title)+'</span></div>';
+  h+='<div class="card"><p class="part">Parte '+(item.s+1)+' · '+item.n+' de 7</p><p class="q">'+esc(q.q)+'</p>';
+  if(q.t==="mc"){
+    h+='<div class="opts">';
+    q.o.forEach(function(o,oi){h+='<label class="opt"><input type="radio" name="opt" value="'+oi+'"'+(saved===oi?' checked':'')+'><span>'+String.fromCharCode(65+oi)+') '+esc(o)+'</span></label>'});
+    h+='</div>';
+  }else{
+    h+='<div class="ans"><label for="inp">Respuesta:</label><input type="text" id="inp" inputmode="decimal" autocomplete="off" value="'+(saved!==undefined?esc(saved):'')+'">'+(q.unit?'<span>'+esc(q.unit)+'</span>':'')+(q.hint?'<span class="hint">'+esc(q.hint)+'</span>':'')+'</div>';
+  }
+  h+='<div class="err" id="err" role="alert"></div></div>';
+  h+='<div class="nav"><button class="ghost" id="prev"'+(idx===0?' disabled':'')+'>Anterior</button><button id="next">'+(idx===TOTAL-1?'Finalizar':'Siguiente')+'</button></div>';
+  screen.innerHTML=h;
+  document.getElementById("prev").addEventListener("click",function(){saveCurrent();idx--;renderQuestion();window.scrollTo(0,0)});
+  document.getElementById("next").addEventListener("click",next);
+  var inp=document.getElementById("inp");
+  if(inp){inp.addEventListener("keydown",function(e){if(e.key==="Enter")next()});inp.addEventListener("input",function(){document.getElementById("err").textContent=""});inp.focus()}
+  document.querySelectorAll('input[name="opt"]').forEach(function(r){r.addEventListener("change",function(){document.getElementById("err").textContent=""})});
+}
+function next(){
+  var item=ALL[idx],v=currentValue(),err=document.getElementById("err");
+  if(v===null){err.textContent=item.q.t==="mc"?"Elegí una opción para continuar.":"Escribí tu respuesta para continuar.";return}
+  if(item.q.t==="num"&&parseNum(v)===null){err.textContent="Escribí solo un número (podés usar coma o punto).";return}
+  answers[idx]=v;
+  if(idx===TOTAL-1){showResult()}else{idx++;renderQuestion();window.scrollTo(0,0)}
+}
+function isOk(i){
+  var q=ALL[i].q,a=answers[i];
+  if(a===undefined)return false;
+  if(q.t==="mc")return a===q.a;
+  var n=parseNum(a);return n!==null&&Math.abs(n-q.a)<=q.tol;
+}
+function showResult(){
+  finished=true;
+  var per=[0,0,0],tot=0;
+  for(var i=0;i<TOTAL;i++){if(isOk(i)){per[ALL[i].s]++;tot++}}
+  var h='<div class="final"><h2>Resultado: '+tot+' de '+TOTAL+' correctas</h2><ul>';
+  SECTIONS.forEach(function(sec,si){h+='<li>'+esc(sec.title)+': '+per[si]+' de 7</li>'});
+  h+='</ul></div>';
+  for(var k=0;k<TOTAL;k++){
+    var it=ALL[k],q=it.q,ok=isOk(k);
+    var mine,right;
+    if(q.t==="mc"){mine=answers[k]===undefined?"sin respuesta":String.fromCharCode(65+answers[k])+") "+q.o[answers[k]];right=String.fromCharCode(65+q.a)+") "+q.o[q.a]}
+    else{mine=answers[k]===undefined?"sin respuesta":String(answers[k]).trim()+(q.unit?" "+q.unit:"");right=fmt(q.a)+(q.unit?" "+q.unit:"")}
+    h+='<div class="rev"><p class="t '+(ok?'ok':'bad')+'">'+(k+1)+'. Parte '+(it.s+1)+' · '+(ok?'Correcta':'Incorrecta')+'</p><p>'+esc(q.q)+'</p><p class="mine">Tu respuesta: '+esc(mine)+'</p>'+(ok?'':'<p class="right">Respuesta correcta: '+esc(right)+'</p>')+'<details><summary>Ver resolución</summary><div class="sol">'+esc(q.sol)+'</div></details></div>';
+  }
+  h+='<div class="nav"><button class="ghost" id="back">Volver a la última pregunta</button><button id="again">Empezar de nuevo</button></div>';
+  screen.innerHTML=h;
+  document.getElementById("again").addEventListener("click",function(){answers=[];idx=0;renderQuestion();window.scrollTo(0,0)});
+  document.getElementById("back").addEventListener("click",function(){idx=TOTAL-1;renderQuestion();window.scrollTo(0,0)});
+  window.scrollTo(0,0);
+}
+renderQuestion();
+</script>
+</body>
+</html>
