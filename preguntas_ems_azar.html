@@ -26,7 +26,7 @@ h1{font-size:20px;margin:8px 0 4px;font-weight:600}
 .ans input[type=text]{font:inherit;font-size:17px;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 11px;width:140px}
 .ans .hint{color:var(--muted);font-size:13px;width:100%}
 .err{color:var(--bad);font-size:14px;min-height:20px;margin:6px 0 0}
-.nav{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
+.nav{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
 button{font:inherit;border:0;border-radius:8px;padding:10px 18px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
 @media (prefers-color-scheme:dark){button{color:#0f1a10}}
 button.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
@@ -48,7 +48,7 @@ button:disabled{opacity:.4;cursor:default}
 <body>
 <main>
 <h1>Tratamiento de la Información y Azar</h1>
-<p class="sub">21 preguntas para EMS. Resolvé cada una a mano, respondé y pasá a la siguiente. Las respuestas se corrigen al final.</p>
+<p class="sub">21 preguntas para EMS. Resolvé cada una a mano y respondé. Una vez que pasás a la siguiente no podés volver atrás. Las respuestas se corrigen al final.</p>
 <div id="screen"></div>
 </main>
 <script>
@@ -74,7 +74,7 @@ var SECTIONS=[
 {title:"Cálculo de probabilidades",desc:"Casos favorables sobre casos posibles, suceso contrario y porcentajes.",qs:[
 {t:"num",q:"En un bolillero hay bolillas numeradas del 1 al 20. Se extrae una al azar. ¿Cuál es la probabilidad (en %) de que el número sea múltiplo de 4?",a:25,tol:0.05,unit:"%",hint:"Escribí solo el número.",sol:"Múltiplos de 4 entre 1 y 20: 4, 8, 12, 16 y 20 (5 casos). Casos posibles: 20. P = 5/20 = 1/4 = 25 %."},
 {t:"num",q:"Una bolsa tiene 7 caramelos de frutilla, 5 de limón y 3 de naranja. Se saca uno al azar. ¿Cuál es la probabilidad (en %) de que NO sea de frutilla? Redondeá a dos decimales.",a:53.33,tol:0.05,unit:"%",hint:"Escribí solo el número, con dos decimales.",sol:"Hay 15 caramelos y 8 no son de frutilla (5 + 3). P = 8/15 ≈ 0,5333 = 53,33 %. También: 1 − 7/15 = 8/15."},
-{t:"num",q:"Se lanzan tres monedas. ¿Cuál es la probabilidad (en %) de obtener exactamente dos caras?",a:37.5,tol:0.05,unit:"%",hint:"Escribí solo el número.",sol:"Resultados posibles: 2 × 2 × 2 = 8. Con exactamente dos caras: CCS, CSC y SCC (3 casos). P = 3/8 = 0,375 = 37,5 %."},
+{t:"num",q:"Se lanzan tres monedas. ¿Cuál es la probabilidad (en %) de obtener exactamente dos caras?",a:37.5,tol:0.05,unit:"%",hint:"Escribí solo el número.",sol:"Resultados posibles: 2 × 2 × 2 = 8. Con exactamente dos caras: CCN, CNC y NCC (3 casos; C = cara, N = número). P = 3/8 = 0,375 = 37,5 %."},
 {t:"mc",q:"Se lanzan dos dados comunes y se suman los números que salen. ¿Cuál es la probabilidad de que la suma sea mayor que 10?",o:["1/12","1/6","1/18","3/12"],a:0,sol:"Hay 6 × 6 = 36 resultados posibles. Suman más de 10: (5,6), (6,5) y (6,6), es decir 3 casos. P = 3/36 = 1/12."},
 {t:"num",q:"La probabilidad de que mañana llueva es 0,35. ¿Cuál es la probabilidad (en %) de que NO llueva?",a:65,tol:0.05,unit:"%",hint:"Escribí solo el número.",sol:"Suceso contrario: P(no llueva) = 1 − 0,35 = 0,65 = 65 %."},
 {t:"num",q:"El equipo de prensa de una agencia está formado por 6 profesionales: 4 hombres y 2 mujeres. Para cubrir un evento, el director selecciona al azar 3 de ellos mediante un sorteo. ¿Cuál es la probabilidad (en %) de que el grupo esté integrado únicamente por varones?",a:20,tol:0.05,unit:"%",hint:"Escribí solo el número.",sol:"Casos posibles: C(6, 3) = 20. Casos favorables (3 varones de los 4): C(4, 3) = 4. P = 4/20 = 20 %.\nOtra forma: 4/6 × 3/5 × 2/4 = 24/120 = 20 %."},
@@ -108,9 +108,8 @@ function renderQuestion(){
     h+='<div class="ans"><label for="inp">Respuesta:</label><input type="text" id="inp" inputmode="decimal" autocomplete="off" value="'+(saved!==undefined?esc(saved):'')+'">'+(q.unit?'<span>'+esc(q.unit)+'</span>':'')+(q.hint?'<span class="hint">'+esc(q.hint)+'</span>':'')+'</div>';
   }
   h+='<div class="err" id="err" role="alert"></div></div>';
-  h+='<div class="nav"><button class="ghost" id="prev"'+(idx===0?' disabled':'')+'>Anterior</button><button id="next">'+(idx===TOTAL-1?'Finalizar':'Siguiente')+'</button></div>';
+  h+='<div class="nav"><button id="next">'+(idx===TOTAL-1?'Finalizar':'Siguiente')+'</button></div>';
   screen.innerHTML=h;
-  document.getElementById("prev").addEventListener("click",function(){saveCurrent();idx--;renderQuestion();window.scrollTo(0,0)});
   document.getElementById("next").addEventListener("click",next);
   var inp=document.getElementById("inp");
   if(inp){inp.addEventListener("keydown",function(e){if(e.key==="Enter")next()});inp.addEventListener("input",function(){document.getElementById("err").textContent=""});inp.focus()}
@@ -143,10 +142,9 @@ function showResult(){
     else{mine=answers[k]===undefined?"sin respuesta":String(answers[k]).trim()+(q.unit?" "+q.unit:"");right=fmt(q.a)+(q.unit?" "+q.unit:"")}
     h+='<div class="rev"><p class="t '+(ok?'ok':'bad')+'">'+(k+1)+'. Parte '+(it.s+1)+' · '+(ok?'Correcta':'Incorrecta')+'</p><p>'+esc(q.q)+'</p><p class="mine">Tu respuesta: '+esc(mine)+'</p>'+(ok?'':'<p class="right">Respuesta correcta: '+esc(right)+'</p>')+'<details><summary>Ver resolución</summary><div class="sol">'+esc(q.sol)+'</div></details></div>';
   }
-  h+='<div class="nav"><button class="ghost" id="back">Volver a la última pregunta</button><button id="again">Empezar de nuevo</button></div>';
+  h+='<div class="nav"><button id="again">Empezar de nuevo</button></div>';
   screen.innerHTML=h;
   document.getElementById("again").addEventListener("click",function(){answers=[];idx=0;renderQuestion();window.scrollTo(0,0)});
-  document.getElementById("back").addEventListener("click",function(){idx=TOTAL-1;renderQuestion();window.scrollTo(0,0)});
   window.scrollTo(0,0);
 }
 renderQuestion();
